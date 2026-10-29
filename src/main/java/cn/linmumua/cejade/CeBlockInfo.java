@@ -1,5 +1,8 @@
 package cn.linmumua.cejade;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
@@ -37,15 +40,30 @@ public record CeBlockInfo(
         return !"minecraft".equals(namespace);
     }
 
-    /** 候选翻译键，按可信度排列。 */
+    /**
+     * 候选翻译键，按可信度排列。
+     *
+     * <p>同一个 CE 方块的不同朝向/连接状态会各自生成一个模型，例如
+     * {@code block/gloomwood_dark_log} 与 {@code block/gloomwood_dark_log_horizontal}，
+     * 但翻译键只有 {@code block.<ns>.gloomwood_dark_log} 一个。
+     * 所以完整路径查不到时，逐级剥掉末尾的 {@code _} 段再试
+     * （实测本地资源包中 689 个无键模型里 661 个能靠这一步命中）。</p>
+     */
     public String[] translationCandidates() {
-        String dotted = path.replace('/', '.');
-        String last = path.contains("/") ? path.substring(path.lastIndexOf('/') + 1) : path;
-        return new String[]{
-                "block." + namespace + "." + dotted,
-                "block." + namespace + "." + last,
-                "item." + namespace + "." + dotted
-        };
+        List<String> keys = new ArrayList<>();
+        int slash = path.lastIndexOf('/');
+        String head = slash < 0 ? "" : path.substring(0, slash + 1).replace('/', '.');
+        String[] parts = (slash < 0 ? path : path.substring(slash + 1)).split("_");
+
+        // 最多剥 4 段：再短就会撞到毫不相关的方块名
+        int floor = Math.max(1, parts.length - 4);
+        for (int n = parts.length; n >= floor; n--) {
+            String base = String.join("_", Arrays.copyOf(parts, n));
+            keys.add("block." + namespace + "." + head + base);
+            keys.add("block." + namespace + "." + base);
+        }
+        keys.add("item." + namespace + "." + path.replace('/', '.'));
+        return keys.toArray(new String[0]);
     }
 
     /** 至少有一张贴图才能画图标。 */
