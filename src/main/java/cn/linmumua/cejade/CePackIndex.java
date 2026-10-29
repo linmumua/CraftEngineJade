@@ -145,14 +145,19 @@ public final class CePackIndex implements IdentifiableResourceReloadListener, Re
     /**
      * 资源包为方块生成了 item model 时返回它的 id（可直接塞进 {@code item_model} 组件）。
      *
-     * <p>CE 会为方块生成 {@code assets/<ns>/items/<方块>.json}，其内容指向
-     * {@code <ns>:item/<方块>}，而后者 parent 到 {@code <ns>:block/<方块>}。
-     * 有它就说明能用原版物品渲染管线画出 3D 等距图标。</p>
+     * <p>CE 会为方块生成 {@code assets/<ns>/items/<方块>.json}。注意变体模型通常没有
+     * 自己的 item 定义——例如 {@code block/gloomwood_dark_log_horizontal} 存在，但
+     * {@code items/gloomwood_dark_log_horizontal.json} 不存在，只有基础名那一份。
+     * 所以这里复用名称解析的剥后缀候选，让变体也能拿到基础方块的 item model。</p>
      */
     private static Identifier itemModelOf(ResourceManager manager, String namespace, String path) {
-        Identifier candidate = Identifier.fromNamespaceAndPath(namespace, path);
-        Identifier file = Identifier.fromNamespaceAndPath(namespace, "items/" + path + ".json");
-        return manager.getResource(file).isPresent() ? candidate : null;
+        for (String candidate : CeBlockInfo.pathCandidates(path)) {
+            Identifier file = Identifier.fromNamespaceAndPath(namespace, "items/" + candidate + ".json");
+            if (manager.getResource(file).isPresent()) {
+                return Identifier.fromNamespaceAndPath(namespace, candidate);
+            }
+        }
+        return null;
     }
 
     /** 沿 parent 链查找模型贴图，返回 [侧面, 顶面]（方块图集 sprite 名）。 */

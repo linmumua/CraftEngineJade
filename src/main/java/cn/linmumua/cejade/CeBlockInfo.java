@@ -51,19 +51,36 @@ public record CeBlockInfo(
      */
     public String[] translationCandidates() {
         List<String> keys = new ArrayList<>();
-        int slash = path.lastIndexOf('/');
-        String head = slash < 0 ? "" : path.substring(0, slash + 1).replace('/', '.');
-        String[] parts = (slash < 0 ? path : path.substring(slash + 1)).split("_");
-
-        // 最多剥 4 段：再短就会撞到毫不相关的方块名
-        int floor = Math.max(1, parts.length - 4);
-        for (int n = parts.length; n >= floor; n--) {
-            String base = String.join("_", Arrays.copyOf(parts, n));
+        for (String candidate : pathCandidates(path)) {
+            int slash = candidate.lastIndexOf('/');
+            String head = slash < 0 ? "" : candidate.substring(0, slash + 1).replace('/', '.');
+            String base = slash < 0 ? candidate : candidate.substring(slash + 1);
             keys.add("block." + namespace + "." + head + base);
             keys.add("block." + namespace + "." + base);
         }
         keys.add("item." + namespace + "." + path.replace('/', '.'));
         return keys.toArray(new String[0]);
+    }
+
+    /**
+     * 模型路径的候选序列：完整路径在前，随后逐级剥掉末尾 {@code _} 段。
+     *
+     * <p>同一 CE 方块的不同朝向/连接状态会各自生成模型，例如
+     * {@code gloomwood_dark_log} 与 {@code gloomwood_dark_log_horizontal}，
+     * 但翻译键与 item 定义都只有基础名一份。名称解析与 item 定义查找共用这套候选。</p>
+     *
+     * <p>最多剥 4 段：再短会撞到毫不相关的方块名。</p>
+     */
+    public static List<String> pathCandidates(String path) {
+        List<String> candidates = new ArrayList<>();
+        int slash = path.lastIndexOf('/');
+        String head = slash < 0 ? "" : path.substring(0, slash + 1);
+        String[] parts = (slash < 0 ? path : path.substring(slash + 1)).split("_");
+        int floor = Math.max(1, parts.length - 4);
+        for (int n = parts.length; n >= floor; n--) {
+            candidates.add(head + String.join("_", Arrays.copyOf(parts, n)));
+        }
+        return candidates;
     }
 
     /** 至少有一张贴图才能画图标。 */
