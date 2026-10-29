@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "id": "cejade",
+  "version": "${version}",
+  "name": "CraftEngine Jade",
+  "description": "在 Jade 提示中显示 CraftEngine 自定义方块的名称、图标与外观。数据直接来自已加载的资源包，CE 改包后自动跟随。",
+  "authors": [
+    "linmumua"
+  ],
+  "license": "GPL-3.0-only",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "cn.linmumua.cejade.CeJadeClient"
+    ],
+    "jade": [
+      "cn.linmumua.cejade.CeJadePlugin"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.20.1",
+    "minecraft": "~26.3",
+    "java": ">=25",
+    "fabric-api": "*",
+    "jade": ">=26.3.5"
+  },
+  "suggests": {
+    "craftengine": "*"
+  }
+}

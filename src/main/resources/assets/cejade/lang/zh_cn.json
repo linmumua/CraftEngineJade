@@ -1,0 +1,5 @@
+{
+  "cejade.config.enabled": "CraftEngine 方块提示",
+  "cejade.config.show_id": "显示方块 ID",
+  "cejade.config.show_state": "显示外观状态"
+}
